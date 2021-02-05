@@ -1,5 +1,5 @@
 # Organizer
-![3D printed stackable storage box](img/example3.png "Actual organizer on the left, software representation on the right")
+![3D printed stackable storage box](img/example3.jpg "Actual organizer on the left, software representation on the right")
 
 
 ## Overview
