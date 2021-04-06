@@ -36,9 +36,11 @@ class OrganizerWindow(Window):
         self.batch = batch
         self.prev_w = 0
         self.prev_h = 0
-        self.selected_drawer = None
+        self.active_drawer = None
         self.found = []
+        self.item_drawers = []
         self.text = ''
+        self.drawer_selected = False
 
     def on_draw(self):
         """Window content needs to be redrawn, resize contents if necassary"""
@@ -54,61 +56,64 @@ class OrganizerWindow(Window):
     def on_click(self, x, y):
         """Mouse has been clicked at given coordinate, (de-)select drawer"""
         drawer = self.organizer.get_drawer(x, y)
-        if (drawer is not self.selected_drawer):
+        if (drawer is not self.active_drawer):
             self.clear_all()
-            if (self.selected_drawer is not None):
-                self.selected_drawer.highlight()
-            else:
-                self.text_input.clear_text()
-            if (drawer is not None):
-                drawer.highlight(SELECT_MASK)
-                items = drawer.get_items()
-            else:
-                items = []
-                self.text_input.clear_text()
-            self.item_list.set_items(items)
-            self.selected_drawer = drawer
+            self.activate_drawer(drawer, True)
 
     def on_enter(self):
         """Enter has been pressed, handle adding items"""
-        name = self.text_input.get_text().strip()
+        text = self.text_input.get_text().strip()
+        selected = self.item_list.get_selected()
         self.text_input.clear_text()
-        self.clear_all()
-        if (name != ''):
-            items = []
-            if (self.selected_drawer is not None):
-                self.selected_drawer.add_item(name)
-                items = self.selected_drawer.get_items()
-            self.item_list.set_items(items)
+        if (text != ''):
+            if (self.drawer_selected):
+                self.active_drawer.add_item(text)
+                items = self.active_drawer.get_items()
+                self.item_list.set_items(items)
+            elif (selected >= 0):
+                drawer = self.item_drawers[selected]
+                self.activate_drawer(drawer, True)
+        elif (self.active_drawer is not None):
+            if (self.drawer_selected):
+                self.active_drawer.highlight(HIGHLIGHT_MASK)
+            else:
+                self.active_drawer.highlight(SELECT_MASK)
+            self.drawer_selected = not self.drawer_selected
 
-    def on_key_press(self, key, mod):
-        """Has no function, supresses closing window via ESC"""
-        pass
+    def on_key_press(self, symbol, mod):
+        """Clear all input on ESC"""
+        if (symbol == key.ESCAPE):
+            self.clear_all()
 
     def on_motion(self, motion):
-        """Handle motion input like up, down and delete"""
-        selected = self.item_list.get_selected()
-        if (motion == key.MOTION_DOWN):
-            self.item_list.select(selected + 1)
-        elif (motion == key.MOTION_UP):
-            self.item_list.select(selected - 1)
-        elif (motion == key.MOTION_DELETE):
-            if (selected != -1 and self.selected_drawer is not None):
-                del self.selected_drawer.get_items()[selected]
-                items = self.selected_drawer.get_items()
-                self.item_list.set_items(items)
-                self.item_list.select()
-        if (self.selected_drawer is None):
-            new_selected = self.item_list.get_selected()
-            if (selected != new_selected):
-                if (selected >= 0):
-                    self.item_drawers[selected].highlight(HIGHLIGHT_MASK)
-                if (new_selected >= 0):
-                    self.item_drawers[new_selected].highlight(SELECT_MASK)
+        """Handle motion input like up, down, left, right and delete"""
+        if (self.drawer_selected or self.text != ''):
+            selected = self.item_list.get_selected()
+            if (motion == key.MOTION_DOWN):
+                self.item_list.select(selected + 1)
+            elif (motion == key.MOTION_UP):
+                self.item_list.select(selected - 1)
+            elif (motion == key.MOTION_DELETE):
+                if (selected >= 0 and self.active_drawer is not None):
+                    del self.active_drawer.get_items()[selected]
+                    items = self.active_drawer.get_items()
+                    self.item_list.set_items(items)
+                    self.item_list.select()
+            if (self.text != '' and not self.drawer_selected):
+                new_selected = self.item_list.get_selected()
+                if (selected != new_selected):
+                    if (selected >= 0):
+                        self.item_drawers[selected].highlight(HIGHLIGHT_MASK)
+                    if (new_selected >= 0):
+                        self.item_drawers[new_selected].highlight(SELECT_MASK)
+        elif (self.active_drawer is None):
+            self.activate_drawer(self.get_box(0, 0).subelems[-1])
+        else:
+            self.move(motion)
 
     def on_search(self, text):
-        """Handle the saerch of the organizer for items"""
-        if self.selected_drawer is None:
+        """Handle the search of the organizer for items"""
+        if (not self.drawer_selected):
             if (self.text != text):
                 self.text = text
                 self.clear_all()
@@ -128,6 +133,71 @@ class OrganizerWindow(Window):
             drawer.highlight()
         self.found = []
         self.item_list.select()
+        if (self.active_drawer is not None):
+            self.active_drawer.highlight()
+        self.drawer_selected = False
+
+
+    def move(self, motion):
+        """Select drawer using the arrow keys"""
+        box = self.active_drawer.box
+        drawers = box.subelems
+        drawer_index = drawers.index(self.active_drawer)
+        if (motion == key.DOWN):
+            if (drawer_index < len(drawers) - 1):
+                self.activate_drawer(drawers[drawer_index + 1])
+            else:
+                new_box = self.get_box(box.x, box.y - 1)
+                if (new_box is not None):
+                    self.activate_drawer(new_box.subelems[0])
+        elif (motion == key.UP):
+            if (drawer_index > 0):
+                self.activate_drawer(drawers[drawer_index - 1])
+            else:
+                new_box = self.get_box(box.x, box.y + box.h)
+                if (new_box is not None):
+                    self.activate_drawer(new_box.subelems[-1])
+        elif (motion == key.LEFT):
+            new_box = self.get_box(box.x - 1, box.y)
+            if (new_box is not None):
+                index = drawer_index * len(new_box.subelems) // len(drawers)
+                self.activate_drawer(new_box.subelems[index])
+        elif (motion == key.RIGHT):
+            new_box = self.get_box(box.x + box.w, box.y)
+            if (new_box is not None):
+                index = drawer_index * len(new_box.subelems) // len(drawers)
+                self.activate_drawer(new_box.subelems[index])
+
+
+    def activate_drawer(self, drawer, selected=False):
+        """Set the active drawer and highlight it accordingly"""
+        if (drawer is not self.activate_drawer):
+            self.clear_all()
+            items = []
+            if (self.active_drawer is not None):
+                self.active_drawer.highlight()
+            else:
+                self.text_input.clear_text()
+            if (drawer is not None):
+                if (selected):
+                    drawer.highlight(SELECT_MASK)
+                else:
+                    drawer.highlight(HIGHLIGHT_MASK)
+                self.drawer_selected = selected
+                items = drawer.get_items()
+            else:
+                self.text_input.clear_text()
+                self.drawer_selected = False
+            self.active_drawer = drawer
+            self.item_list.set_items(items)
+
+    def get_box(self, x, y):
+        """Return the box at a given coordinate"""
+        for box in self.organizer.subelems:
+            if (x >= box.x and x <= box.x + box.w - 1
+                    and y >= box.y and y <= box.y + box.h - 1):
+                return box
+        return None
 
 
 class OrganizerGUI(model.Element):
@@ -208,7 +278,7 @@ class BoxGUI(model.Element):
         # create list of DrawerGUI objects from drawers
         drawers_gui = []
         for drawer in drawers:
-            drawers_gui.append(DrawerGUI(drawer.subelems, batch, groups))
+            drawers_gui.append(DrawerGUI(drawer.subelems, self, batch, groups))
         # intialize parent class with newly created drawers_gui
         super().__init__(drawers_gui)
 
@@ -229,8 +299,9 @@ class BoxGUI(model.Element):
 
 class DrawerGUI(model.Element):
     """Class of drawer objects with resizeable GUI"""
-    def __init__(self, items, batch, groups):
+    def __init__(self, items, box, batch, groups):
         super().__init__(items)
+        self.box = box
         self.rect = Rectangle(
             0, 0, 1, 1, color=DRAWER_COLOR, batch=batch, group=groups[1])
         self.handle = batch.add(
