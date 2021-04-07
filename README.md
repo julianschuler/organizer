@@ -56,15 +56,15 @@ After everything is set up, the program can be run from the repository directory
 ```shell
 python3 organizer.py
 ```
-A drawer can be selected by clicking on them, by clicking somewhere else within the window, all drawers are unselected.
-If no drawer is selected, the text field serves as a search bar, listing all items containing the search terms and highlighting their corresponding drawers. By using the arrow keys, one item of the list can be selected, its drawer is beeing highlighted in a different color.
+A drawer can be selected by clicking on them or navigating to it using the arrow keys and hitting enter. By clicking somewhere else within the window or hitting enter again, the drawer is unselected. Hit the escape key to remove all highlighting.
+If no drawer is selected, the text field serves as a search bar, listing all items containing the search terms and highlighting their corresponding drawers. By using the arrow keys, one item of the list can be selected, its drawer is being highlighted in a different color. You can hit enter to select the drawer to e.g. add items to it.
 
 Example: All drawers containing the term "item" are highlighted, the drawer with "Item 2" is selected and highlighted seperately:
 ![Example for search function](img/example1.png)
 
-When a drawer is selected, items can be added to or removed from it. An item can be added by typing its name to text field and hitting the enter/return key. By selecting an item with the arrow keys and hitting the delete key, it will be removed. Attention: This process can't be undone!
+When a drawer is selected, items can be added, removed or renamed. An item can be added by typing its name to the text field and hitting enter. By selecting an item with the arrow keys and hitting the delete key, it will be removed. Attention: This process can't be undone! An item can be renamed by selecting it and hitting enter, hitting enter again saves all changes, escape discards them. To unselect the current drawer, hit the escape key or navigate up until no item is selected and hit enter.
 
-Example: The top left drawer is selected, it containes three Items. Items can now be added to or removed from this drawer:
+Example: The top left drawer is selected, it containes three items. Items can now be added to it, removed or renamed:
 ![Example for items in a drawer](img/example2.png)
 
 
