@@ -59,6 +59,7 @@ class OrganizerWindow(Window):
         drawer = self.organizer.get_drawer(x, y)
         if (drawer is not self.active_drawer):
             self.clear_all()
+            self.text_input.clear_text()
             self.activate_drawer(drawer, True)
 
     def on_enter(self):
@@ -69,7 +70,9 @@ class OrganizerWindow(Window):
         if (text != ''):
             if (self.drawer_selected):
                 if (self.renaming):
-                    self.item_list.items[selected].name = text
+                    item = self.item_list.items[selected]
+                    item.name = text
+                    item.lower = text.lower()
                     self.renaming = False
                 else:
                     self.active_drawer.add_item(text)
@@ -78,6 +81,8 @@ class OrganizerWindow(Window):
             elif (selected >= 0):
                 drawer = self.item_drawers[selected]
                 self.activate_drawer(drawer, True)
+            else:
+                self.clear_all()
         elif (self.active_drawer is not None):
             if (self.drawer_selected):
                 if (selected >= 0):
@@ -92,6 +97,8 @@ class OrganizerWindow(Window):
             else:
                 self.active_drawer.highlight(SELECT_MASK)
                 self.drawer_selected = True
+                items = self.active_drawer.get_items()
+                self.item_list.set_items(items)
 
     def on_key_press(self, symbol, mod):
         """Clear all input on ESC"""
@@ -131,27 +138,29 @@ class OrganizerWindow(Window):
         """Handle the search of the organizer for items"""
         if (not self.drawer_selected):
             if (self.text != text):
-                self.text = text
                 self.clear_all()
-                items = []
-                self.item_drawers = []
+                self.text = text
                 if (len(text.strip()) >= FIND_MIN_LENGTH):
+                    items = []
+                    self.item_drawers = []
                     self.found = self.organizer.find(text.lower().split())
                     for drawer, i in self.found:
                         drawer.highlight(HIGHLIGHT_MASK)
                         items += i
                         self.item_drawers += [drawer] * len(i)
-                self.item_list.set_items(items)
+                    self.item_list.set_items(items)
 
     def clear_all(self):
-        """Clear all selections and highlights"""
+        """Clear all selections, highlights and text input"""
         for drawer, items in self.found:
             drawer.highlight()
         self.found = []
         self.item_list.select()
+        self.item_list.set_items()
         if (self.active_drawer is not None):
             self.active_drawer.highlight()
         self.drawer_selected = False
+        self.text = ''
 
 
     def move(self, motion):
@@ -189,7 +198,6 @@ class OrganizerWindow(Window):
         """Set the active drawer and highlight it accordingly"""
         if (drawer is not self.activate_drawer):
             self.clear_all()
-            items = []
             if (self.active_drawer is not None):
                 self.active_drawer.highlight()
             else:
@@ -201,11 +209,11 @@ class OrganizerWindow(Window):
                     drawer.highlight(HIGHLIGHT_MASK)
                 self.drawer_selected = selected
                 items = drawer.get_items()
+                self.item_list.set_items(items)
             else:
                 self.text_input.clear_text()
                 self.drawer_selected = False
             self.active_drawer = drawer
-            self.item_list.set_items(items)
 
     def get_box(self, x, y):
         """Return the box at a given coordinate"""
