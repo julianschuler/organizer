@@ -2,11 +2,10 @@ from pyglet import app
 from pyglet.graphics import Batch, OrderedGroup
 from gui import OrganizerGUI, OrganizerWindow
 from model import Organizer
-from settings import *
+from settings import GROUP_COUNT
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # setup batch and groups
     batch = Batch()
     groups = [OrderedGroup(i) for i in range(GROUP_COUNT)]

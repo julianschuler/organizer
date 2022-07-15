@@ -1,16 +1,16 @@
-### general settings
+# *** general settings ***
 # char produced by enter/return at on_text event, possibly OS spcific
-CHAR_ENTER = '\r'
+CHAR_ENTER = "\r"
 FIND_MIN_LENGTH = 3
 
 
-### GUI settings
-#window settings
+# *** GUI settings ***
+# window settings
 FULLSCREEN = False
 WINDOW_WIDTH = 1920 * 4 // 2
 WINDOW_HEIGHT = 1080 * 4 // 2
-WINDOW_TITLE = 'Organizer'
-FONT_NAME = 'Arial'
+WINDOW_TITLE = "Organizer"
+FONT_NAME = "Arial"
 FONT_SIZE = 35
 
 # margin size, as fraction of font size
@@ -41,14 +41,14 @@ HIGHLIGHT_MASK = (0, 100, 0)
 SELECT_MASK = (0, 50, 100)
 
 
-### data storage settings
+# *** data storage settings ***
 # name of the database file
-ORGANIZER_DB = 'organizer.db'
+ORGANIZER_DB = "organizer.db"
 # name of the file for the initial config
-ORGANIZER_CONF = 'organizer.conf'
+ORGANIZER_CONF = "organizer.conf"
 
 
-### advanced settings, shouldn't be changed
+# *** advanced settings, shouldn't be changed ***
 # group count, change only if more groups are needed
 GROUP_COUNT = 3
 # amount of triangles for displaying the handle

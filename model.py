@@ -1,9 +1,10 @@
 import shelve
-from settings import *
+import settings as conf
 
 
 class Element:
     """Base class for all elements containing subelements"""
+
     def __init__(self, subelems):
         self.subelems = subelems
 
@@ -17,6 +18,7 @@ class Element:
 
 class Organizer(Element):
     """Organizer, contains boxes"""
+
     def __init__(self):
         data = self.__load()
         if data is None:
@@ -27,15 +29,15 @@ class Organizer(Element):
 
     def save(self):
         """Save the organizer and its content to disk"""
-        with shelve.open(ORGANIZER_DB) as db:
-            db['organizer'] = (self.subelems, self.w, self.h)
-    
+        with shelve.open(conf.ORGANIZER_DB) as db:
+            db["organizer"] = (self.subelems, self.w, self.h)
+
     def __load(self):
         """Load the organizer and its content from disk"""
         data = None
         try:
-            with shelve.open(ORGANIZER_DB) as db:
-                data = db['organizer']
+            with shelve.open(conf.ORGANIZER_DB) as db:
+                data = db["organizer"]
         except FileNotFoundError:
             pass
         return data
@@ -48,16 +50,16 @@ class Organizer(Element):
         symbols = {}
         layout = []
         # read conf file
-        with open(ORGANIZER_CONF) as conf:
-            lines = conf.read().splitlines()
+        with open(conf.ORGANIZER_CONF) as conf_file:
+            lines = conf_file.read().splitlines()
         # parse drawer count and box layout to symbol dict and layout array
         for line in lines:
-            if (len(line) > 2 and line[0] != '#'):
-                if (':' in line):
-                    s = line.split(':')
+            if len(line) > 2 and line[0] != "#":
+                if ":" in line:
+                    s = line.split(":")
                     symbols[s[0]] = s[1]
                 else:
-                    layout.append(line.split(' '))
+                    layout.append(line.split(" "))
                     w = max(w, len(layout[-1]))
                     h += 1
         # create boxes from layout
@@ -67,7 +69,7 @@ class Organizer(Element):
             j = 0
             while j < org_w:
                 s = c = line[j]
-                if (c == ''):
+                if c == "":
                     j += 1
                 else:
                     w = 0
@@ -78,18 +80,18 @@ class Organizer(Element):
                     for k in range(int(symbols[s])):
                         drawers.append(Drawer([]))
                     # determine box width
-                    while (c == s and j < org_w):
+                    while c == s and j < org_w:
                         j += 1
                         w += 1
-                        if (j < org_w):
+                        if j < org_w:
                             c = line[j]
                     # determine box height and flag array entries to be ignored
                     c = s
-                    while (c == s and i + h < org_h):
+                    while c == s and i + h < org_h:
                         for k in range(w):
-                            layout[i + h][x + k] = ''
+                            layout[i + h][x + k] = ""
                         h += 1
-                        if (i + h < org_h):
+                        if i + h < org_h:
                             c = layout[i + h][x]
                     boxes.append(Box(drawers, x, org_h - i - h, w, h))
         return (boxes, org_w, org_h)
@@ -97,6 +99,7 @@ class Organizer(Element):
 
 class Box(Element):
     """Box, contains drawers"""
+
     def __init__(self, drawers, x, y, w, h):
         super().__init__(drawers)
         self.x = x
@@ -107,20 +110,22 @@ class Box(Element):
 
 class Drawer(Element):
     """Drawer, can countain multiple Items"""
+
     def __init__(self, items=[]):
         super().__init__(items)
 
 
 class Item:
     """Item, has a name and can have an amount"""
+
     def __init__(self, name, amount=None):
         self.name = name
         self.amount = amount
         self.lower = self.name.lower()
-    
+
     def find(self, str):
         """Return [self] if all elems of str is contained in name, else []"""
         for s in str:
-            if not s in self.lower:
+            if s not in self.lower:
                 return []
         return [self]
