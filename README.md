@@ -3,7 +3,7 @@
 
 
 ## Overview
-I recently printed myself the [Various Size Stackable Resistor Storage Box](https://www.prusaprinters.org/prints/7643 "https://www.prusaprinters.org/prints/7643") by termlimit to store all my electronics utilities and other small items. With around 270h of print time and around 5.3kg of filament this was neither a short nor cheap endeavour, but it fits my needs better than every storage system I could find for sale.
+I recently printed myself the [Various Size Stackable Resistor Storage Box](https://www.printables.com/prints/7643 "https://www.printables.com/prints/7643") by termlimit to store all my electronics utilities and other small items. With around 270h of print time and around 5.3kg of filament this was neither a short nor cheap endeavour, but it fits my needs better than every storage system I could find for sale.
 To keep track of all my items without labels I wrote this graphical interface in python3 using pyglet. See [How to use](#how-to-use) for a detailed description of the functionality.
 
 
@@ -17,7 +17,7 @@ After pyglet is installed, clone the repository and cd into it
 git clone https://github.com/julianschuler/organizer.git
 cd organizer/
 ```
-It can be now continued with the initial setup.
+Now, everything is prepared for the initial setup.
 
 
 ## Setting up the organizer
@@ -48,7 +48,9 @@ and should match the configured layout. See [Changing the layout](#changing-the-
 
 
 ## Changing the layout
-To change the layout, exit the program if running, make your changes in [`organizer.conf`](organizer.conf), delete or move `organizer.db` and start the program again. Attention: Since all the items are saved in `organizer.db`, they are lost after this step and have to be added again!
+To change the layout, exit the program if running, make your changes in [`organizer.conf`](organizer.conf), delete or move `organizer.json` and start the program again. Attention: Since all the items are saved in `organizer.json`, they are lost after this step and have to be added again!
+
+Alternatively, the file `organizer.json` can be edited manually to keep the items.
 
 
 ## How to use
