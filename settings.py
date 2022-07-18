@@ -42,8 +42,10 @@ SELECT_MASK = (0, 50, 100)
 
 
 # *** data storage settings ***
-# name of the database file
-ORGANIZER_DB = "organizer.db"
+# name of the json database file
+ORGANIZER_JSON = "organizer.json"
+# indentation of the json database file, set to None to disable formatting
+ORGANIZER_JSON_INDENT = 2
 # name of the file for the initial config
 ORGANIZER_CONF = "organizer.conf"
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from pyglet import app
 from pyglet.graphics import Batch, OrderedGroup
 from gui import OrganizerGUI, OrganizerWindow
@@ -10,7 +12,7 @@ if __name__ == "__main__":
     batch = Batch()
     groups = [OrderedGroup(i) for i in range(GROUP_COUNT)]
     # create organizer object
-    organizer = Organizer()
+    organizer = Organizer.load()
     organizer_gui = OrganizerGUI(organizer, batch, groups)
     # create window and execute main program loop
     window = OrganizerWindow(organizer_gui, batch, groups)

@@ -1,9 +1,11 @@
-import shelve
+import json
 import settings as conf
 
 
 class Element:
     """Base class for all elements containing subelements"""
+
+    subelem_name = ""
 
     def __init__(self, subelems):
         self.subelems = subelems
@@ -15,34 +17,53 @@ class Element:
             result += subelem.find(str)
         return result
 
+    def asdict(self):
+        subelems = []
+        for subelem in self.subelems:
+            subelems.append(subelem.asdict())
+        return {self.subelem_name: subelems}
+
 
 class Organizer(Element):
     """Organizer, contains boxes"""
 
-    def __init__(self):
-        data = self.__load()
-        if data is None:
-            data = self.__parse_config()
-        super().__init__(data[0])
-        self.w = data[1]
-        self.h = data[2]
+    subelem_name = "boxes"
+
+    def __init__(self, boxes, width, height):
+        super().__init__(boxes)
+        self.w = width
+        self.h = height
 
     def save(self):
         """Save the organizer and its content to disk"""
-        with shelve.open(conf.ORGANIZER_DB) as db:
-            db["organizer"] = (self.subelems, self.w, self.h)
+        with open(conf.ORGANIZER_JSON, "w") as f:
+            json.dump(self.asdict(), f, indent=conf.ORGANIZER_JSON_INDENT)
 
-    def __load(self):
+    def asdict(self):
+        dct = {"width": self.w, "height": self.h}
+        dct.update(super().asdict())
+        return dct
+
+    @classmethod
+    def fromdict(cls, dct):
+        boxes = []
+        for box in dct[cls.subelem_name]:
+            boxes.append(Box.fromdict(box))
+        return Organizer(boxes, dct["width"], dct["height"])
+
+    @classmethod
+    def load(cls):
         """Load the organizer and its content from disk"""
-        data = None
         try:
-            with shelve.open(conf.ORGANIZER_DB) as db:
-                data = db["organizer"]
+            with open(conf.ORGANIZER_JSON) as f:
+                dct = json.load(f)
+            organizer = Organizer.fromdict(dct)
         except FileNotFoundError:
-            pass
-        return data
+            organizer = cls.__parse_config()
+        return organizer
 
-    def __parse_config(self):
+    @classmethod
+    def __parse_config(cls):
         """Parse the organizer structure from config file"""
         boxes = []
         w = 0
@@ -94,11 +115,13 @@ class Organizer(Element):
                         if i + h < org_h:
                             c = layout[i + h][x]
                     boxes.append(Box(drawers, x, org_h - i - h, w, h))
-        return (boxes, org_w, org_h)
+        return Organizer(boxes, org_w, org_h)
 
 
 class Box(Element):
     """Box, contains drawers"""
+
+    subelem_name = "drawers"
 
     def __init__(self, drawers, x, y, w, h):
         super().__init__(drawers)
@@ -107,12 +130,33 @@ class Box(Element):
         self.w = w
         self.h = h
 
+    def asdict(self):
+        dct = {"x": self.x, "y": self.y, "w": self.w, "h": self.h}
+        dct.update(super().asdict())
+        return dct
+
+    @classmethod
+    def fromdict(cls, dct):
+        drawers = []
+        for drawer in dct[cls.subelem_name]:
+            drawers.append(Drawer.fromdict(drawer))
+        return Box(drawers, dct["x"], dct["y"], dct["w"], dct["h"])
+
 
 class Drawer(Element):
     """Drawer, can countain multiple Items"""
 
+    subelem_name = "items"
+
     def __init__(self, items=[]):
         super().__init__(items)
+
+    @classmethod
+    def fromdict(cls, dct):
+        items = []
+        for item in dct[cls.subelem_name]:
+            items.append(Item.fromdict(item))
+        return Drawer(items)
 
 
 class Item:
@@ -129,3 +173,10 @@ class Item:
             if s not in self.lower:
                 return []
         return [self]
+
+    def asdict(self):
+        return {"name": self.name, "amount": self.amount}
+
+    @classmethod
+    def fromdict(cls, dct):
+        return Item(dct["name"], dct["amount"])
