@@ -10,7 +10,7 @@ import model
 
 
 class OrganizerWindow(Window):
-    """Main program window, handles the background color an resizing"""
+    """Main program window, handles the background color and resizing"""
 
     def __init__(self, organizer, batch, groups):
         if conf.FULLSCREEN:
@@ -491,9 +491,9 @@ class TextInput:
         self.rect.x = x
         self.rect.y = y
         self.rect.width = w
-        self.input.x = x + self.margin
-        self.input.y = y + self.margin
-        self.input.width = w - 2 * self.margin
+        self.input.x = int(x + self.margin)
+        self.input.y = int(y + self.margin)
+        self.input.width = int(w - 2 * self.margin)
 
     def get_text(self):
         """Return currently displayed text"""
