@@ -1,3 +1,7 @@
+import os
+
+f_dir = os.path.dirname(__file__)
+
 # *** general settings ***
 # char produced by enter/return at on_text event, possibly OS spcific
 CHAR_ENTER = "\r"
@@ -43,11 +47,11 @@ SELECT_MASK = (0, 50, 100)
 
 # *** data storage settings ***
 # name of the json database file
-ORGANIZER_JSON = "organizer.json"
+ORGANIZER_JSON = os.path.join(f_dir, "organizer.json")
 # indentation of the json database file, set to None to disable formatting
 ORGANIZER_JSON_INDENT = 2
 # name of the file for the initial config
-ORGANIZER_CONF = "organizer.conf"
+ORGANIZER_CONF = os.path.join(f_dir, "organizer.conf")
 
 
 # *** advanced settings, shouldn't be changed ***
