@@ -11,11 +11,11 @@ FIND_MIN_LENGTH = 3
 # *** GUI settings ***
 # window settings
 FULLSCREEN = False
-WINDOW_WIDTH = 1920 * 4 // 2
-WINDOW_HEIGHT = 1080 * 4 // 2
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 WINDOW_TITLE = "Organizer"
-FONT_NAME = "Arial"
-FONT_SIZE = 35
+FONT_NAME = "Roboto"
+FONT_SIZE = 17
 
 # margin size, as fraction of font size
 TEXT_INPUT_MARGIN = 0.5
