@@ -1,18 +1,21 @@
 from pyglet import event
-from pyglet.gl import glClearColor, GL_TRIANGLES
-from pyglet.window import key, Window
+from pyglet.gl import GL_TRIANGLES, glClearColor
+from pyglet.graphics import Group, ShaderGroup
+from pyglet.graphics.shader import Shader, ShaderProgram
 from pyglet.shapes import Rectangle
 from pyglet.text import Label, caret
 from pyglet.text.document import FormattedDocument
 from pyglet.text.layout import IncrementalTextLayout
-import settings as conf
+from pyglet.window import Window, key
+
 import model
+import settings as conf
 
 
 class OrganizerWindow(Window):
     """Main program window, handles the background color and resizing"""
 
-    def __init__(self, organizer, batch, groups):
+    def __init__(self, batch, groups):
         if conf.FULLSCREEN:
             super().__init__(caption=conf.WINDOW_TITLE, fullscreen=True)
         else:
@@ -25,7 +28,7 @@ class OrganizerWindow(Window):
             conf.BACKGROUND_COLOR[2] / 255,
             1,
         )
-        self.organizer = organizer
+
         # define callbacks used by caret in text input
         def click_callback(x, y):
             self.on_click(x, y)
@@ -59,6 +62,9 @@ class OrganizerWindow(Window):
         self.text = ""
         self.drawer_selected = False
         self.renaming = False
+
+    def set_organizer(self, organizer):
+        self.organizer = organizer
 
     def on_draw(self):
         """Window content needs to be redrawn, resize contents if necassary"""
@@ -258,7 +264,7 @@ class OrganizerGUI(model.Element):
             boxes_gui.append(
                 BoxGUI(box.subelems, box.x, box.y, box.w, box.h, batch, groups)
             )
-        # intialize parent class with newly created drawers_gui
+        # intialize parent class with newly created boxes_gui
         super().__init__(boxes_gui)
         self.w = organizer.w
         self.h = organizer.h
@@ -339,7 +345,7 @@ class BoxGUI(model.Element):
         drawer_h = module_h - 2 * dm
         drawer_x = x + bm + dm
         module_y = y + bm + dm
-        # create list of DrawerGUI objects from drawers
+        # resize all drawers with the new parameters
         for i, drawer in enumerate(self.subelems):
             drawer_y = module_y + (drawer_num - 1 - i) * module_h
             drawer.resize(drawer_x, drawer_y, drawer_w, drawer_h, hh, ht)
@@ -354,10 +360,15 @@ class DrawerGUI(model.Element):
         self.rect = Rectangle(
             0, 0, 1, 1, color=conf.DRAWER_COLOR, batch=batch, group=groups[1]
         )
-        self.handle = batch.add(
-            conf.TRIANGLE_COUNT * 3, GL_TRIANGLES, groups[2], "v2f", "c3B"
+
+        colors = conf.HANDLE_COLOR * conf.TRIANGLE_COUNT * 3
+        self.handle = groups.shader.vertex_list(
+            conf.TRIANGLE_COUNT * 3,
+            GL_TRIANGLES,
+            batch,
+            groups.shadergroup,
+            colors=("Bn", colors),
         )
-        self.handle.colors = conf.HANDLE_COLOR * conf.TRIANGLE_COUNT * 3
 
     def is_clicked(self, x, y):
         """Test if drawer is clicked"""
@@ -377,7 +388,7 @@ class DrawerGUI(model.Element):
         hw = w * conf.HANDLE_WIDTH
         ox = x + (w - hw) / 2
         hhy = hh
-        self.handle.vertices = [
+        self.handle.position[:] = [
             ox,
             y,
             ox + hh,
@@ -425,7 +436,7 @@ class DrawerGUI(model.Element):
             color_rect.append(conf.DRAWER_COLOR[i] + c)
             color_handle.append(conf.HANDLE_COLOR[i] + c)
         self.rect.color = color_rect
-        self.handle.colors = color_handle * conf.TRIANGLE_COUNT * 3
+        # self.handle.colors = color_handle * conf.TRIANGLE_COUNT * 3
 
     def add_item(self, name, amount=None):
         """Add an item to the drawer"""
@@ -635,3 +646,48 @@ class Caret(caret.Caret):
         self.on_motion(motion)
         self.on_search(self.document.text)
         return event.EVENT_HANDLED
+
+
+class Groups:
+    """Wrapper around a list of groups and shader"""
+
+    def __init__(self):
+        # create shader program
+        vertex_source = """#version 150 core
+            in vec2 position;
+            in vec3 colors;
+            out vec4 vertex_colors;
+
+            uniform WindowBlock
+            {
+                mat4 projection;
+                mat4 view;
+            } window;
+
+            void main()
+            {
+                gl_Position = window.projection * vec4(position, 0.0, 1.0);
+                vertex_colors = vec4(colors, 1.0);
+            }
+        """
+        fragment_source = """#version 150 core
+            in vec4 vertex_colors;
+            out vec4 final_color;
+
+            void main()
+            {
+                final_color = vertex_colors;
+            }
+        """
+        self.shader = ShaderProgram(
+            Shader(vertex_source, "vertex"), Shader(fragment_source, "fragment")
+        )
+
+        # create shader group (drawn last)
+        self.shadergroup = ShaderGroup(self.shader, conf.GROUP_COUNT)
+
+        # create all other groups
+        self.groups = [Group(i) for i in range(conf.GROUP_COUNT)]
+
+    def __getitem__(self, i):
+        return self.groups[i]
